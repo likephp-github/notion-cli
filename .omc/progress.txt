@@ -1,0 +1,46 @@
+notion-cli — Progress Log
+==========================
+
+[2026-04-30 17:14] Iteration 1 — PRD setup
+[2026-04-30 17:30] Iteration 2 — Phase 1 done (10 stories, 47 tests)
+[2026-04-30 17:50] Iteration 3 — Phase 2 done (7 stories cum, 73 tests)
+[2026-04-30 18:00] Iteration 4 — Phase 3 done (4 stories, schema cache + coercion engine, 112 tests)
+[2026-04-30 18:15] Iteration 5 — Phase 4 done (markdown converter + card read/append, 131 tests)
+[2026-04-30 18:25] Iteration 6 — Phase 5 done (comments + search, 137 tests)
+[2026-04-30 18:35] Iteration 7 — Phase 6 done (README, ai-usage.md, CI workflow); ALL stories passes:true
+
+Final state:
+  Source files: 21 modules (src/notion_cli/{cli,config,credentials,client,output,errors,logging}.py
+                            + commands/{init,logout,auth,database,card,comments,search}.py
+                            + notion/{schema,coercion,markdown}.py)
+  Test files: 15 (tests/unit/test_*.py covering 137 tests)
+  Docs: README.md, docs/ai-usage.md, docs/examples/claude-code.md
+  CI: .github/workflows/ci.yml (Python 3.11/3.12/3.13 matrix)
+
+Verification:
+  .venv/bin/ruff check src/ tests/         → All checks passed!
+  .venv/bin/mypy src/notion_cli            → Success: no issues found in 21 source files
+  .venv/bin/pytest tests/unit -q           → 137 passed
+
+Smoke tests run during iteration:
+  --version → 0.1.0
+  logout idempotent on empty → exit 0
+  auth status (unconfigured) → configured=false
+  init --token fake → INVALID_TOKEN exit 2
+  database add/ls/rm roundtrip → exit 0
+
+Key design decisions implemented:
+- Output contract: stdout JSON envelope on success, stderr JSON envelope on failure
+- Exit codes: 0/1/2/3/4 for success/USER_ERROR/AUTH_ERROR/API_ERROR/NOT_FOUND
+- Token storage: OS keyring primary, chmod-600 secrets.toml fallback (config.toml never has token)
+- Tenacity retry: predicate-based (only 429/5xx/network), 3 attempts with exponential backoff
+- Schema cache: ~/.cache/notion-cli/schema/<db_id>.json with 1h TTL, --no-cache override
+- Type-aware coercion: 13 property types supported with options validation; --set-raw escape hatch
+- Markdown converter: 8 block types round-trip; rich_text supports both 'plain_text' (response shape)
+  and 'text.content' (request shape) for symmetric conversion
+
+Open follow-ups (not in MVP scope):
+- OAuth multi-workspace (architecture-ready via credentials.token_source abstraction)
+- MCP server wrapper (core package can be reused)
+- Webhook listener for "Notion → AI" trigger
+- Multi-profile support (notion-cli init --profile work)

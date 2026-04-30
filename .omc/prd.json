@@ -1,0 +1,43 @@
+{
+  "title": "notion-cli — AI 驅動的 Notion 資料庫操作工具",
+  "planPath": ".omc/plans/notion-cli-mvp.md",
+  "summary": "Python CLI for AI agents to CRUD Notion database cards, read/write card blocks, comment, and search. Phase 1-6 implemented.",
+  "stories": [
+    { "id": "US-001", "title": "Project scaffold + packaging", "phase": 1, "passes": true, "acceptanceCriteria": ["pyproject.toml + entry point", "venv install", "--version 0.1.0", "ruff/mypy clean"] },
+    { "id": "US-002", "title": "Output contract + error handling + exit codes", "phase": 1, "passes": true, "acceptanceCriteria": ["emit_ok stdout / emit_error stderr", "CLIError subclasses with exit codes 1/2/3/4"] },
+    { "id": "US-003", "title": "Configuration loader (config.toml)", "phase": 1, "passes": true, "acceptanceCriteria": ["XDG load/save/resolve_database covered by tests"] },
+    { "id": "US-004", "title": "Credentials store (keyring + chmod-600 fallback)", "phase": 1, "passes": true, "acceptanceCriteria": ["keyring primary, chmod 600 fallback, env override, idempotent delete"] },
+    { "id": "US-005", "title": "Notion API client wrapper with retry + token masking", "phase": 1, "passes": true, "acceptanceCriteria": ["get_client raises AuthError when no token", "tenacity retry on transient only (predicate-based)", "log filter masks tokens"] },
+    { "id": "US-006", "title": "CLI root app (Typer)", "phase": 1, "passes": true, "acceptanceCriteria": ["--version prints 0.1.0", "--help lists init/logout/auth/database/card/comment/search"] },
+    { "id": "US-007", "title": "notion-cli init wizard", "phase": 1, "passes": true, "acceptanceCriteria": ["non-interactive happy path", "ALREADY_CONFIGURED rejection", "--force overwrites", "interactive token prompt via getpass"] },
+    { "id": "US-008", "title": "notion-cli logout", "phase": 1, "passes": true, "acceptanceCriteria": ["clears token + config + cache", "--keep-config preserves", "idempotent on empty state"] },
+    { "id": "US-009", "title": "notion-cli auth verify + status", "phase": 1, "passes": true, "acceptanceCriteria": ["auth verify lists databases", "auth status reports source without leaking token"] },
+    { "id": "US-010", "title": "Phase 1 verification", "phase": 1, "passes": true, "acceptanceCriteria": ["unit tests pass", "ruff clean", "mypy clean", "smoke tests pass"] },
+
+    { "id": "US-021", "title": "database add / ls / rm — alias management", "phase": 2, "passes": true, "acceptanceCriteria": ["add validates UUID, refuses dup without --force", "ls reports default flag", "rm idempotent"] },
+    { "id": "US-022", "title": "card list with --filter-json / --sort / --limit / pagination", "phase": 2, "passes": true, "acceptanceCriteria": ["multi-page pagination until limit", "filter-json passthrough", "sort with - prefix"] },
+    { "id": "US-023", "title": "card get", "phase": 2, "passes": true, "acceptanceCriteria": ["happy path emits properties", "404 → exit 4 NOT_FOUND"] },
+    { "id": "US-024", "title": "card create", "phase": 2, "passes": true, "acceptanceCriteria": ["title routed to title property", "--set + --set-raw merge", "schema-aware via Phase 3 coercion"] },
+    { "id": "US-025", "title": "card update", "phase": 2, "passes": true, "acceptanceCriteria": ["chain pages.retrieve → databases.retrieve → pages.update", "--set-raw alone skips schema retrieval"] },
+    { "id": "US-026", "title": "card archive (with --yes guard, idempotent)", "phase": 2, "passes": true, "acceptanceCriteria": ["--yes required (or NOTION_CLI_FORCE=1)", "idempotent on already-archived"] },
+    { "id": "US-027", "title": "Phase 2 verification", "phase": 2, "passes": true, "acceptanceCriteria": ["lint/type/test green", "database alias roundtrip smoke"] },
+
+    { "id": "US-031", "title": "database schema introspection + cache", "phase": 3, "passes": true, "acceptanceCriteria": ["cold/warm/expired/no-cache covered", "summarize_schema extracts options"] },
+    { "id": "US-032", "title": "Property coercion engine (--set Prop=Val typed)", "phase": 3, "passes": true, "acceptanceCriteria": ["all property types covered (title/rich_text/number/select/multi_select/status/checkbox/date/url/email/phone/people/relation)", "unknown/unsupported errors with hint"] },
+    { "id": "US-033", "title": "Wire coercion into card create/update + --set-raw escape hatch", "phase": 3, "passes": true, "acceptanceCriteria": ["create/update use coerce()", "--set-raw merges after coerced values"] },
+    { "id": "US-034", "title": "Phase 3 verification", "phase": 3, "passes": true, "acceptanceCriteria": ["ruff/mypy/pytest all pass"] },
+
+    { "id": "US-041", "title": "Markdown ↔ blocks converter (round-trip)", "phase": 4, "passes": true, "acceptanceCriteria": ["all supported types round-trip", "unsupported types render as comment"] },
+    { "id": "US-042", "title": "card read --format markdown|json", "phase": 4, "passes": true, "acceptanceCriteria": ["pagination of blocks.children.list", "markdown / json modes"] },
+    { "id": "US-043", "title": "card append --markdown / --from-file", "phase": 4, "passes": true, "acceptanceCriteria": ["appends parsed blocks", "rejects both/neither sources"] },
+    { "id": "US-044", "title": "Phase 4 verification", "phase": 4, "passes": true, "acceptanceCriteria": ["ruff/mypy/pytest all pass"] },
+
+    { "id": "US-051", "title": "comment add / list", "phase": 5, "passes": true, "acceptanceCriteria": ["comment add posts rich_text", "list paginates"] },
+    { "id": "US-052", "title": "search command", "phase": 5, "passes": true, "acceptanceCriteria": ["--type page|database filter passthrough", "--limit caps with pagination", "title extraction for both objects"] },
+    { "id": "US-053", "title": "Phase 5 verification", "phase": 5, "passes": true, "acceptanceCriteria": ["ruff/mypy/pytest all pass"] },
+
+    { "id": "US-061", "title": "README quickstart + docs/ai-usage.md", "phase": 6, "passes": true, "acceptanceCriteria": ["README quickstart from install → init → first card", "ai-usage.md JSON contract + per-command examples", "docs/examples/claude-code.md"] },
+    { "id": "US-062", "title": "CI workflow + pre-commit hint", "phase": 6, "passes": true, "acceptanceCriteria": [".github/workflows/ci.yml runs ruff + mypy + pytest on Python 3.11/3.12/3.13"] },
+    { "id": "US-063", "title": "Phase 6 verification — final lint/type/test green", "phase": 6, "passes": true, "acceptanceCriteria": ["ruff All checks passed!", "mypy 0 errors", "pytest 137 pass", "all stories passes:true"] }
+  ]
+}
